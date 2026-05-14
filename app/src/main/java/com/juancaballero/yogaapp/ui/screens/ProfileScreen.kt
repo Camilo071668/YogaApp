@@ -2,17 +2,7 @@ package com.juancaballero.yogaapp.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,22 +13,13 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -48,14 +29,13 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
-// Nota: Si ZenFlowBg o ZenFlowOrange salen en rojo, verifica que la ruta de tu Theme sea correcta.
 import com.juancaballero.yogaapp.ui.theme.ZenFlowBg
 import com.juancaballero.yogaapp.ui.theme.ZenFlowOrange
 
 @Composable
-fun ProfileScreen(onLogout: () -> Unit) {
-    var totalMinutes by remember { mutableStateOf(0) }
-    var routinesCount by remember { mutableStateOf(0) }
+fun ProfileScreen(onLogout: () -> Unit) { // Limpié el parámetro 'item' que causaba conflicto
+    var totalMinutes by remember { mutableIntStateOf(0) }
+    var routinesCount by remember { mutableIntStateOf(0) }
     val db = Firebase.firestore
     val auth = Firebase.auth
     val uid = auth.currentUser?.uid
@@ -75,7 +55,7 @@ fun ProfileScreen(onLogout: () -> Unit) {
             .fillMaxSize()
             .background(ZenFlowBg)
             .padding(24.dp)
-            .verticalScroll(rememberScrollState()), // Por si la pantalla es pequeña, que se pueda bajar
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(40.dp))
@@ -100,11 +80,40 @@ fun ProfileScreen(onLogout: () -> Unit) {
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Tarjetas de progreso (Con tus variables de Firebase)
-        ProgressCard(title = "Total Minutes", value = "$totalMinutes", icon = Icons.Default.DateRange)
+        // Tarjetas de progreso
+        ProgressCard(title = "Total Minutes", value = "$totalMinutes", icon = Icons.Default.Timer)
         ProgressCard(title = "Routines Completed", value = "$routinesCount", icon = Icons.Default.CheckCircle)
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        // --- FUNCIONALIDAD: BARRA DE NIVEL (XP) ---
+        // (Quitamos el 'item' y dejamos el contenido directo)
+        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Level 1 (Novice)", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text("350 / 500 XP", color = Color.Gray, fontSize = 12.sp)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { 0.7f },
+                modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
+                color = ZenFlowOrange,
+                trackColor = Color.LightGray.copy(alpha = 0.3f)
+            )
+        }
+
+        // --- FUNCIONALIDAD: LOGROS (BADGES) ---
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text("Achievements", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                BadgeIcon("🔥", "7 Day Streak", unlocked = true)
+                BadgeIcon("🧘", "First Session", unlocked = true)
+                BadgeIcon("🏆", "Zen Master", unlocked = false)
+                BadgeIcon("🌑", "Night Owl", unlocked = false)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         // INTERRUPTOR DE RECORDATORIOS
         ReminderSwitchCard()
@@ -114,13 +123,13 @@ fun ProfileScreen(onLogout: () -> Unit) {
         // BOTÓN DE CERRAR SESIÓN
         Button(
             onClick = {
-                auth.signOut() // Cierra sesión en Firebase
-                onLogout() // Le avisa al NavGraph que vuelva al Login
+                auth.signOut()
+                onLogout()
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF5350)), // Color rojo suave
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF5350)),
             shape = RoundedCornerShape(25.dp)
         ) {
             Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Logout", tint = Color.White)
@@ -128,7 +137,23 @@ fun ProfileScreen(onLogout: () -> Unit) {
             Text("Log Out", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
 
-        Spacer(modifier = Modifier.height(40.dp)) // Espacio final para que no pegue abajo
+        Spacer(modifier = Modifier.height(40.dp))
+    }
+}
+
+// --- COMPONENTE DE MEDALLAS ---
+@Composable
+fun BadgeIcon(emoji: String, title: String, unlocked: Boolean) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .background(if (unlocked) Color(0xFFFFF3E0) else Color(0xFFF5F5F5), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(emoji, fontSize = 24.sp, modifier = Modifier.alpha(if (unlocked) 1f else 0.3f))
+        }
+        Text(title, fontSize = 10.sp, color = if (unlocked) Color.Black else Color.Gray)
     }
 }
 
@@ -147,7 +172,7 @@ fun ProgressCard(title: String, value: String, icon: ImageVector) {
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(title, color = Color.Gray, fontSize = 14.sp)
-                Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             }
         }
     }

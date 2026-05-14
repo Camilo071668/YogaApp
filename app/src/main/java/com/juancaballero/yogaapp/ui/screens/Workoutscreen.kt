@@ -1,6 +1,7 @@
 package com.juancaballero.yogaapp.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,12 +16,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -32,6 +40,8 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
+import com.juancaballero.yogaapp.ui.theme.ZenFlowOrange
+import kotlinx.coroutines.delay
 
 // Función para guardar el progreso en Firebase
 fun updateProgress(minutesToAdd: Int) {
@@ -48,53 +58,65 @@ fun updateProgress(minutesToAdd: Int) {
     }
 }
 
-// Interfaz Gráfica de la pantalla de ejercicio
 @Composable
-fun ActiveWorkoutScreen(
-    workoutName: String = "Morning Stretch",
-    durationMinutes: Int = 5,
-    onBack: () -> Unit // Función para volver al Home tras terminar
-) {
-    // Usamos los colores de tu tema
-    val zenFlowBg = Color(0xFFFAFAFA)
-    val zenFlowOrange = Color(0xFFFF8A65)
+fun WorkoutScreen(totalMinutes: Int, routineTitle: String, onFinish: () -> Unit) {
+    // ESTADOS: Segundos restantes y si el reloj está activo
+    var secondsLeft by remember { mutableIntStateOf(totalMinutes * 60) }
+    var isRunning by remember { mutableStateOf(false) }
+
+    // EL MOTOR DEL RELOJ
+    LaunchedEffect(isRunning, secondsLeft) {
+        if (isRunning && secondsLeft > 0) {
+            delay(1000L) // Espera un segundo
+            secondsLeft -= 1
+        }
+    }
+
+    // Formateo del tiempo (ej: 05:00)
+    val displayMinutes = secondsLeft / 60
+    val displaySeconds = secondsLeft % 60
+    val timeFormatted = String.format("%d:%02d", displayMinutes, displaySeconds)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(zenFlowBg)
+            .background(Color.White)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Título del Ejercicio
-        Text(text = workoutName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = "Focus on your breathing", fontSize = 16.sp, color = Color.Gray)
+        // Títulos
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(top = 40.dp)
+        ) {
+            Text(text = routineTitle, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Focus on your breathing", fontSize = 16.sp, color = Color.Gray)
+        }
 
-        Spacer(modifier = Modifier.height(60.dp))
-
-        // Círculo gigante simulando el temporizador / estado
+        // CÍRCULO CENTRAL CON CLICK PARA INICIAR/PAUSAR
         Box(
             modifier = Modifier
-                .size(250.dp)
-                .shadow(8.dp, CircleShape)
-                .background(Color.White, CircleShape),
+                .size(280.dp)
+                .shadow(12.dp, CircleShape)
+                .background(Color.White, CircleShape)
+                .clickable { isRunning = !isRunning }, // <-- Toca para empezar!
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(
-                    imageVector = Icons.Default.PlayArrow,
+                    imageVector = if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = null,
-                    tint = zenFlowOrange,
-                    modifier = Modifier.size(60.dp)
+                    tint = ZenFlowOrange,
+                    modifier = Modifier.size(48.dp)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
-                    text = "$durationMinutes:00",
-                    fontSize = 48.sp,
+                    text = timeFormatted,
+                    fontSize = 64.sp,
                     fontWeight = FontWeight.Bold,
-                    color = zenFlowOrange
+                    color = ZenFlowOrange
                 )
                 Text(
                     text = "MINUTES",
@@ -105,25 +127,21 @@ fun ActiveWorkoutScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(80.dp))
-
-        // Botón para terminar y guardar en Firebase
+        // BOTÓN FINALIZAR (Guarda en Firebase y vuelve al Home)
         Button(
             onClick = {
-                // Llama a tu función de Firebase para sumar minutos y rutinas
-                updateProgress(minutesToAdd = durationMinutes)
-                // Vuelve a la pantalla anterior
-                onBack()
+                // LLAMAMOS A LA FUNCIÓN DE FIREBASE ANTES DE SALIR
+                updateProgress(minutesToAdd = totalMinutes)
+                onFinish()
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = zenFlowOrange)
+                .height(60.dp)
+                .padding(bottom = 8.dp),
+            shape = RoundedCornerShape(30.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = ZenFlowOrange)
         ) {
-            Icon(Icons.Default.Check, contentDescription = null, tint = Color.White)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Finish Workout", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(text = "✓ Finish Workout", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

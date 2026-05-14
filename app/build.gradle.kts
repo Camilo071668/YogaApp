@@ -64,6 +64,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")     // Para el Login
     implementation("com.google.firebase:firebase-firestore-ktx") // Para el Perfil (Edad/Lesiones)
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("com.airbnb.android:lottie-compose:6.4.0")
 }
 
 

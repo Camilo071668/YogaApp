@@ -1,7 +1,6 @@
 package com.juancaballero.yogaapp.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import kotlinx.coroutines.delay
 // --- IMPORTS NUEVOS PARA LAS ANIMACIONES Y FORMAS ---
@@ -10,30 +9,26 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.LinearEasing
-import kotlinx.coroutines.delay
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.IconButton
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.ui.draw.shadow
 // ----------------------------------------------------
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,13 +39,12 @@ import com.juancaballero.yogaapp.R
 import com.juancaballero.yogaapp.ui.components.WorkoutCard
 import com.juancaballero.yogaapp.ui.theme.ZenFlowOrange
 import com.juancaballero.yogaapp.ui.theme.ZenFlowBg
-import com.google.firebase.firestore.SetOptions
 
 @Composable
 fun HomeScreen(
-    onLogout: () -> Unit,
-    onWorkoutClick: () -> Unit,
-    onProfileClick: () -> Unit
+    onWorkoutClick: (String, String) -> Unit,
+    onProfileClick: () -> Unit,
+    onLogout: () -> Unit
 ) {
     var userName by remember { mutableStateOf("Loading...") }
     val db = Firebase.firestore
@@ -94,11 +88,9 @@ fun HomeScreen(
             Text(text = "Hello, $userName", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             Text(text = "What do you need today?", fontSize = 16.sp, color = Color.Gray)
 
-            Spacer(modifier = Modifier.height(16.dp)) // Reduje un poco este espacio a 16.dp para que quepa todo
+            Spacer(modifier = Modifier.height(16.dp)) // Reduje un poco este espacio a 16.dp para que quepa todoController
 
-            // ---------------------------------------------------------
             // ¡AQUÍ ESTAMOS LLAMANDO A LA NUEVA TARJETA DE RESPIRACIÓN!
-            // ---------------------------------------------------------
             BreathingCard()
 
             // Agregamos un espacio para separar la tarjeta animada de la lista de ejercicios
@@ -114,8 +106,52 @@ fun HomeScreen(
                         title = workout.title,
                         duration = workout.duration,
                         iconRes = workout.iconRes,
-                        onClick = onWorkoutClick
+                        onClick = { onWorkoutClick(workout.title, workout.duration) }
                     )
+                }
+                // --- FUNCIONALIDAD: BARRA DE BÚSQUEDA ---
+                item {
+                    OutlinedTextField(
+                        value = "", onValueChange = {},
+                        placeholder = { Text("Search for poses or routines...") },
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) },
+                        colors = TextFieldDefaults.colors(focusedContainerColor = Color.White, unfocusedContainerColor = Color.White)
+                    )
+                }
+
+// --- FUNCIONALIDAD: CATEGORÍAS HORIZONTALES ---
+                item {
+                    Text("Categories", fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(vertical = 8.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        val categories = listOf("Stretching", "Power Yoga", "Meditation", "Sleep", "Back Pain")
+                        items(categories) { cat ->
+                            SuggestionChip(
+                                onClick = { },
+                                label = { Text(cat) },
+                                shape = RoundedCornerShape(20.dp)
+                            )
+                        }
+                    }
+                }
+
+// --- FUNCIONALIDAD: BANNER MOTIVACIONAL ---
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
+                        shape = RoundedCornerShape(20.dp)
+                    ) {
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFB74D))
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                "\"Yoga is not about touching your toes, it's about what you learn on the way down.\"",
+                                fontSize = 14.sp, fontStyle = FontStyle.Italic, color = Color.DarkGray
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -282,3 +318,4 @@ fun BreathingCard() {
         }
     }
 }
+

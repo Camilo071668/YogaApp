@@ -3,6 +3,7 @@ package com.juancaballero.yogaapp.ui.screens
 import com.juancaballero.yogaapp.ui.theme.ZenFlowBg
 import com.juancaballero.yogaapp.ui.theme.ZenFlowOrange
 import android.app.Activity
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
