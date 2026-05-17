@@ -104,6 +104,16 @@ fun ProfileScreen(
 }
 
 @Composable
+fun ZenFlowBottomBar(
+    currentRoute: String,
+    onHomeClick: () -> Unit,
+    onDiscoverClick: () -> Unit,
+    onProfileClick: () -> Unit
+) {
+    TODO("Not yet implemented")
+}
+
+@Composable
 fun ProgressCard(title: String, value: String, icon: ImageVector) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).shadow(2.dp, RoundedCornerShape(16.dp)),

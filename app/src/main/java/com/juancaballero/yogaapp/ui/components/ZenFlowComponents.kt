@@ -1,12 +1,12 @@
 package com.juancaballero.yogaapp.ui.components
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.juancaballero.yogaapp.ui.theme.ZenFlowOrange
 
-/** (Login/Registro) **/
+/** 1. CAMPO DE TEXTO (Login/Registro) **/
 @Composable
 fun ZenFlowTextField(
     value: String,
@@ -43,6 +43,7 @@ fun ZenFlowTextField(
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.White,
             unfocusedContainerColor = Color.White,
+            disabledContainerColor = Color.White,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
         ),
@@ -64,12 +65,14 @@ fun WorkoutCard(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .shadow(4.dp, RoundedCornerShape(24.dp))
-            .clickable { onClick() }, // Ahora toda la tarjeta es clickeable
+            .clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
-            modifier = Modifier.padding(20.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -83,19 +86,22 @@ fun WorkoutCard(
                 Text(text = title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
                 Text(text = duration, color = Color.Gray, fontSize = 14.sp)
             }
-            Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = null, tint = Color.LightGray)
+            // Corregido: Uso de AutoMirrored para evitar el warning
+            Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Color.LightGray)
         }
     }
 }
 
-/** 3. NUEVO: BARRA DE BÚSQUEDA (Para llenar el Home) **/
+/** 3. BARRA DE BÚSQUEDA **/
 @Composable
 fun ZenSearchBar(value: String, onValueChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = { Text("Search routine...", color = Color.Gray) },
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = ZenFlowOrange) },
         colors = TextFieldDefaults.colors(
@@ -106,13 +112,15 @@ fun ZenSearchBar(value: String, onValueChange: (String) -> Unit) {
     )
 }
 
-/** 4. NUEVO: WATER TRACKER (Gamificación) **/
+/** 4. WATER TRACKER **/
 @Composable
 fun WaterTrackerWidget() {
     var count by remember { mutableIntStateOf(0) }
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)), // Azul agua suave
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
         shape = RoundedCornerShape(24.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -129,12 +137,14 @@ fun WaterTrackerWidget() {
     }
 }
 
-/** 5. NUEVO: BANNER DE CITA DIARIA **/
+/** 5. BANNER DE CITA DIARIA **/
 @Composable
 fun DailyZenQuote(quote: String) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)), // Naranja crema
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
         shape = RoundedCornerShape(20.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -145,10 +155,12 @@ fun DailyZenQuote(quote: String) {
     }
 }
 
-/** 6. NUEVO: BARRA DE NIVEL / XP (Perfil) **/
+/** 6. BARRA DE NIVEL / XP **/
 @Composable
 fun ZenLevelBar(level: Int, xp: Int, totalXp: Int) {
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 12.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("Yogui Level $level", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = ZenFlowOrange)
             Text("$xp / $totalXp XP", color = Color.Gray, fontSize = 12.sp)
@@ -156,9 +168,60 @@ fun ZenLevelBar(level: Int, xp: Int, totalXp: Int) {
         Spacer(modifier = Modifier.height(8.dp))
         LinearProgressIndicator(
             progress = { xp.toFloat() / totalXp.toFloat() },
-            modifier = Modifier.fillMaxWidth().height(10.dp).clip(CircleShape),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .clip(CircleShape),
             color = ZenFlowOrange,
             trackColor = Color.LightGray.copy(alpha = 0.2f)
+        )
+    }
+}
+
+/** 7. BARRA DE NAVEGACIÓN INFERIOR (Añadida para corregir errores de x0, x1) **/
+@Composable
+fun ZenFlowBottomBar(
+    currentRoute: String,
+    onHomeClick: () -> Unit,
+    onDiscoverClick: () -> Unit,
+    onProfileClick: () -> Unit
+) {
+    NavigationBar(
+        containerColor = Color.White,
+        tonalElevation = 8.dp
+    ) {
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, null) },
+            label = { Text("Home") },
+            selected = currentRoute == "home",
+            onClick = onHomeClick,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = ZenFlowOrange,
+                selectedTextColor = ZenFlowOrange,
+                indicatorColor = Color.Transparent
+            )
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Explore, null) },
+            label = { Text("Discover") },
+            selected = currentRoute == "discover",
+            onClick = onDiscoverClick,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = ZenFlowOrange,
+                selectedTextColor = ZenFlowOrange,
+                indicatorColor = Color.Transparent
+            )
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Person, null) },
+            label = { Text("Profile") },
+            selected = currentRoute == "profile",
+            onClick = onProfileClick,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = ZenFlowOrange,
+                selectedTextColor = ZenFlowOrange,
+                indicatorColor = Color.Transparent
+            )
         )
     }
 }
