@@ -59,7 +59,6 @@ fun RegisterScreen(
     var acceptedTerms by remember { mutableStateOf(false) }
 
     val auth = Firebase.auth
-    val activity = LocalView.current.context as Activity
 
     // Manejo de errores
     var nameError by remember { mutableStateOf("") }
@@ -208,7 +207,7 @@ fun RegisterScreen(
 
                     if (vName.first && vEmail.first && vPass.first && vConf.first && acceptedTerms) {
                         auth.createUserWithEmailAndPassword(inputEmail, inputPassword)
-                            .addOnCompleteListener(activity) { task ->
+                            .addOnCompleteListener { task -> // <-- Se quita el parámetro (activity)
                                 if (task.isSuccessful) {
                                     onRegisterSuccess()
                                 } else {

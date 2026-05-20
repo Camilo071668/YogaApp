@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.juancaballero.yogaapp.ui.screens.*
+import com.juancaballero.yogaapp.ui.utils.AIPoseScreen // Importación de la pantalla de IA
 
 @Composable
 fun ZenFlowNavGraph() {
@@ -60,7 +61,7 @@ fun ZenFlowNavGraph() {
                 onHomeClick = { navController.navigate("home") { popUpTo("discover") { inclusive = true } } },
                 onProfileClick = { navController.navigate("profile") },
                 onWorkoutClick = { title, duration -> navController.navigate("workout_timer/$title/$duration") },
-                onBlogClick = { blogTitle -> navController.navigate("blog_detail/$blogTitle") } // NUEVO
+                onBlogClick = { blogTitle -> navController.navigate("blog_detail/$blogTitle") }
             )
         }
 
@@ -80,7 +81,6 @@ fun ZenFlowNavGraph() {
             )
         }
 
-        // --- NUEVA PANTALLA: LECTURA DE BLOGS ---
         composable(
             route = "blog_detail/{title}",
             arguments = listOf(navArgument("title") { type = NavType.StringType })
@@ -92,6 +92,7 @@ fun ZenFlowNavGraph() {
             )
         }
 
+        // ENRUTAMIENTO DINÁMICO: Abre la cámara con IA y envía la rutina seleccionada
         composable(
             route = "workout_timer/{title}/{duration}",
             arguments = listOf(
@@ -103,10 +104,10 @@ fun ZenFlowNavGraph() {
             val durationStr = backStackEntry.arguments?.getString("duration") ?: "5 min"
             val minutes = durationStr.split(" ")[0].toIntOrNull() ?: 5
 
-            WorkoutScreen(
-                routineTitle = title,
-                totalMinutes = minutes,
-                onFinish = { navController.popBackStack() }
+            AIPoseScreen(
+                exerciseName = title,
+                durationMinutes = minutes,
+                onBack = { navController.popBackStack() }
             )
         }
     }

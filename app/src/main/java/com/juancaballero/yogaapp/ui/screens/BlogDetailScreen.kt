@@ -26,8 +26,6 @@ import com.juancaballero.yogaapp.ui.theme.ZenFlowOrange
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BlogDetailScreen(title: String, onBack: () -> Unit) {
-
-    // Contenido simulado dinámico (dependiendo de qué artículo toques)
     val articleContent = when (title) {
         "5 Benefits of Morning Yoga" -> "Waking up early and stepping onto your mat can completely transform your day. Morning yoga helps awaken your body, boosts your metabolism, and clears your mind before the daily chaos begins.\n\n1. Improves Flexibility\n2. Boosts Energy Levels\n3. Reduces Stress\n4. Enhances Focus\n5. Promotes Better Posture\n\nTry starting with just 5 minutes a day!"
         "How to breathe correctly" -> "Breathing is the core of Yoga (Pranayama). Most of us take shallow breaths into our chest. To breathe correctly, place a hand on your belly. As you inhale, feel your belly rise like a balloon. As you exhale, feel it fall. This deep diaphragmatic breathing signals your nervous system to relax and reduces anxiety instantly."
@@ -38,17 +36,13 @@ fun BlogDetailScreen(title: String, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { }, // Título vacío para un look más limpio
+                title = { },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") }
                 },
                 actions = {
-                    IconButton(onClick = { /* Lógica de compartir en el futuro */ }) {
-                        Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.Gray)
-                    }
-                    IconButton(onClick = { /* Lógica de guardar en favoritos */ }) {
-                        Icon(Icons.Default.BookmarkBorder, contentDescription = "Save", tint = Color.Gray)
-                    }
+                    IconButton(onClick = {}) { Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.Gray) }
+                    IconButton(onClick = {}) { Icon(Icons.Default.BookmarkBorder, contentDescription = "Save", tint = Color.Gray) }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = ZenFlowBg)
             )
@@ -56,12 +50,8 @@ fun BlogDetailScreen(title: String, onBack: () -> Unit) {
         containerColor = ZenFlowBg
     ) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
+            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
         ) {
-            // Imagen/Banner simulado (Premium)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -76,28 +66,12 @@ fun BlogDetailScreen(title: String, onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Textos
             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-                Text(
-                    text = "LIFESTYLE & HEALTH",
-                    color = ZenFlowOrange,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    letterSpacing = 1.5.sp
-                )
+                Text("LIFESTYLE & HEALTH", color = ZenFlowOrange, fontWeight = FontWeight.Bold, fontSize = 12.sp, letterSpacing = 1.5.sp)
                 Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = title,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    lineHeight = 34.sp
-                )
-
+                Text(text = title, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black, lineHeight = 34.sp)
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Autor Simulado
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(40.dp).background(Color.LightGray, CircleShape), contentAlignment = Alignment.Center) {
                         Text("Z", color = Color.White, fontWeight = FontWeight.Bold)
@@ -110,15 +84,7 @@ fun BlogDetailScreen(title: String, onBack: () -> Unit) {
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
-
-                // Contenido principal del blog
-                Text(
-                    text = articleContent,
-                    fontSize = 16.sp,
-                    color = Color.DarkGray,
-                    lineHeight = 26.sp
-                )
-
+                Text(text = articleContent, fontSize = 16.sp, color = Color.DarkGray, lineHeight = 26.sp)
                 Spacer(modifier = Modifier.height(40.dp))
             }
         }

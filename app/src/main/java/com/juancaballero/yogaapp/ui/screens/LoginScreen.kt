@@ -43,9 +43,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onClickRegister: () -> Unit) {
 
     // Instancia de Firebase Auth para manejar el inicio de sesión
     val auth = Firebase.auth
-    val context = LocalView.current.context
-    // Necesitamos el 'Activity' para que Firebase gestione los hilos de ejecución correctamente
-    val activity = context as? Activity
 
     // Estados para los Inputs (Guardar lo que el usuario escribe)
     var inputEmail by remember { mutableStateOf("") }
@@ -163,20 +160,18 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onClickRegister: () -> Unit) {
                         passwordError = passValid.second
 
                         if (emailValid.first && passValid.first) {
-                            activity?.let { act ->
-                                auth.signInWithEmailAndPassword(inputEmail, inputPassword)
-                                    .addOnCompleteListener(act) { task ->
-                                        if (task.isSuccessful) {
-                                            onLoginSuccess()
-                                        } else {
-                                            loginError = when (task.exception) {
-                                                is FirebaseAuthInvalidCredentialsException -> "Incorrect credentials"
-                                                is FirebaseAuthInvalidUserException -> "Account does not exist"
-                                                else -> "Error: ${task.exception?.message}"
-                                            }
+                            auth.signInWithEmailAndPassword(inputEmail, inputPassword)
+                                .addOnCompleteListener { task -> // <-- Se elimina 'activity' y el bloque 'let'
+                                    if (task.isSuccessful) {
+                                        onLoginSuccess()
+                                    } else {
+                                        loginError = when (task.exception) {
+                                            is FirebaseAuthInvalidCredentialsException -> "Incorrect credentials"
+                                            is FirebaseAuthInvalidUserException -> "Account does not exist"
+                                            else -> "Error: ${task.exception?.message}"
                                         }
                                     }
-                            }
+                                }
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),

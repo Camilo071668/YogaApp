@@ -3,6 +3,7 @@ package com.juancaballero.yogaapp.ui.utils
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
@@ -12,7 +13,10 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,35 +35,44 @@ import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseDetection
 import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions
 import com.juancaballero.yogaapp.ui.theme.ZenFlowOrange
-import com.juancaballero.yogaapp.ui.utils.PoseUtils
+import com.juancaballero.yogaapp.ui.screens.updateProgress // Conexión a tu lógica de Firebase
+import kotlinx.coroutines.delay
 import java.util.concurrent.Executors
 
 @SuppressLint("UnsafeOptInUsageError")
 @OptIn(ExperimentalGetImage::class)
 @Composable
-fun AIPoseScreen(exerciseName: String, onBack: () -> Unit) {
+fun AIPoseScreen(exerciseName: String, durationMinutes: Int = 5, onBack: () -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // ESTADOS
     var feedbackText by remember { mutableStateOf("Buscando cuerpo...") }
     var currentPose by remember { mutableStateOf<Pose?>(null) }
+    var isPoseCorrect by remember { mutableStateOf(false) }
+    var secondsLeft by remember { mutableIntStateOf(durationMinutes * 60) }
+
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         )
     }
 
-    // LANZADOR DE PERMISOS
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { granted -> hasCameraPermission = granted }
     )
 
-    // PEDIR PERMISO AL INICIAR
     LaunchedEffect(Unit) {
         if (!hasCameraPermission) {
             launcher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    // El temporizador avanza únicamente si la IA detecta que haces la postura correctamente
+    LaunchedEffect(isPoseCorrect, secondsLeft) {
+        if (isPoseCorrect && secondsLeft > 0) {
+            delay(1000L)
+            secondsLeft -= 1
         }
     }
 
@@ -70,7 +83,6 @@ fun AIPoseScreen(exerciseName: String, onBack: () -> Unit) {
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         if (hasCameraPermission) {
-            // 1. VISTA DE CÁMARA
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { ctx ->
@@ -94,8 +106,8 @@ fun AIPoseScreen(exerciseName: String, onBack: () -> Unit) {
                                 poseDetector.process(inputImage)
                                     .addOnSuccessListener { pose ->
                                         currentPose = pose
-                                        // AQUÍ LLAMAS A TU LÓGICA DE IA (PoseUtils)
-                                        val result = PoseUtils.validateCobra(pose)
+                                        val result = PoseUtils.validatePose(exerciseName, pose)
+                                        isPoseCorrect = result.first
                                         feedbackText = result.second
                                     }
                                     .addOnCompleteListener { imageProxy.close() }
@@ -116,29 +128,66 @@ fun AIPoseScreen(exerciseName: String, onBack: () -> Unit) {
                 }
             )
 
-            // 2. ESQUELETO
             currentPose?.let { pose ->
                 SkeletonOverlay(pose)
             }
 
-            // 3. UI DE FEEDBACK
+            // UI del Reloj
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 48.dp, end = 24.dp)
+                    .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Timer, contentDescription = null, tint = ZenFlowOrange, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    val min = secondsLeft / 60
+                    val sec = secondsLeft % 60
+                    Text(
+                        text = String.format("%d:%02d", min, sec),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
+            // Panel de Control
             Card(
                 modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp).fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f))
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isPoseCorrect) Color(0xFFE8F5E9).copy(alpha = 0.9f) else Color.White.copy(alpha = 0.9f)
+                )
             ) {
                 Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(exerciseName.uppercase(), fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = feedbackText, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ZenFlowOrange)
+                    Text(
+                        text = feedbackText,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isPoseCorrect) Color(0xFF2E7D32) else ZenFlowOrange
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = ZenFlowOrange)) {
+                    Button(
+                        onClick = {
+                            val minutesTrained = durationMinutes - (secondsLeft / 60)
+                            if (minutesTrained > 0) {
+                                updateProgress(minutesTrained)
+                                Toast.makeText(context, "Saved: +$minutesTrained min", Toast.LENGTH_SHORT).show()
+                            }
+                            onBack()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = ZenFlowOrange)
+                    ) {
                         Text("Terminar Sesión")
                     }
                 }
             }
         } else {
-            // SI NO HAY PERMISO, MOSTRAR MENSAJE
             Column(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
@@ -156,11 +205,17 @@ fun AIPoseScreen(exerciseName: String, onBack: () -> Unit) {
 @Composable
 fun SkeletonOverlay(pose: Pose) {
     Canvas(modifier = Modifier.fillMaxSize()) {
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+
         pose.allPoseLandmarks.forEach { landmark ->
+            val scaleX = canvasWidth / 480f
+            val scaleY = canvasHeight / 640f
+
             drawCircle(
                 color = Color.Green,
-                radius = 10f,
-                center = Offset(landmark.position.x, landmark.position.y)
+                radius = 12f,
+                center = Offset(landmark.position.x * scaleX, landmark.position.y * scaleY)
             )
         }
     }

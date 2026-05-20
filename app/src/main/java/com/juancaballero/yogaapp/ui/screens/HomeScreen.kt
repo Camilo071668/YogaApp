@@ -64,13 +64,21 @@ fun HomeScreen(
         WorkoutItem("Energy Boost", "10 min", Icons.Default.Bolt, "Power")
     )
 
-    // Filtrado por texto y categoría (Funcionalidad 1 y 2)
+    // Filtrado por texto y categoría
     val filteredWorkouts = allWorkouts.filter {
         it.title.contains(searchQuery, ignoreCase = true) &&
                 (selectedCategory == "All" || it.category == selectedCategory)
     }
 
     Scaffold(
+        bottomBar = { // <-- AQUÍ VOLVEMOS A AGREGAR LA BARRA INFERIOR
+            ZenFlowBottomBar(
+                currentRoute = "home",
+                onHomeClick = {},
+                onDiscoverClick = onDiscoverClick,
+                onProfileClick = onProfileClick
+            )
+        },
         containerColor = ZenFlowBg
     ) { innerPadding ->
         Column(
@@ -82,7 +90,7 @@ fun HomeScreen(
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
-            // CABECERA CON NOTIFICACIÓN (Funcionalidad 3)
+            // CABECERA CON NOTIFICACIÓN
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column {
                     Text(text = "Hello, $userName", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
@@ -95,12 +103,12 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // MOOD SELECTOR (Funcionalidad 4)
+            // MOOD SELECTOR
             MoodSelector()
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // BUSCADOR (Funcionalidad 1)
+            // BUSCADOR
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -113,7 +121,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // CATEGORÍAS (Funcionalidad 5)
+            // CATEGORÍAS
             Text("Categories", fontWeight = FontWeight.Bold, fontSize = 20.sp)
             LazyRow(modifier = Modifier.padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val categories = listOf("All", "Stretching", "Meditation", "Focus", "Power")
@@ -128,10 +136,14 @@ fun HomeScreen(
                 }
             }
 
-            // CARRUSEL DE RUTINAS (Funcionalidad 6)
+            // CARRUSEL DE RUTINAS
             LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 items(filteredWorkouts) { workout ->
-                    PremiumRoutineCard(workout.title, workout.duration, workout.icon) {
+                    PremiumRoutineCard(
+                        title = workout.title,
+                        duration = workout.duration,
+                        icon = workout.icon
+                    ) {
                         onWorkoutClick(workout.title, workout.duration)
                     }
                 }
@@ -139,7 +151,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // RESUMEN DE SALUD (Funcionalidad 7 y 8)
+            // RESUMEN DE SALUD
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Box(modifier = Modifier.weight(1f)) { WaterTrackerWidget() }
                 Box(modifier = Modifier.weight(1f)) { DailyStepsWidget() }
@@ -147,12 +159,12 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // TARJETA DE RESPIRACIÓN (Funcionalidad 9)
+            // TARJETA DE RESPIRACIÓN
             BreathingCard()
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // CITA DIARIA (Funcionalidad 10)
+            // CITA DIARIA
             Card(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)), shape = RoundedCornerShape(20.dp)) {
                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color(0xFFFFB74D))
@@ -165,16 +177,83 @@ fun HomeScreen(
 }
 
 @Composable
-fun BreathingCard() {
-    TODO("Not yet implemented")
+fun PremiumRoutineCard(title: String, duration: String, icon: ImageVector, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .width(160.dp)
+            .height(200.dp)
+            .shadow(8.dp, RoundedCornerShape(24.dp))
+            .clickable { onClick() },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.padding(16.dp).fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+            Box(modifier = Modifier.size(48.dp).background(Color(0xFFFFF0EB), CircleShape), contentAlignment = Alignment.Center) {
+                Icon(icon, contentDescription = null, tint = ZenFlowOrange)
+            }
+            Column {
+                Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Schedule, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(duration, color = Color.Gray, fontSize = 12.sp)
+                }
+            }
+        }
+    }
 }
 
 @Composable
-fun PremiumRoutineCard(x0: String, x1: String, x2: ImageVector, content: @Composable () -> Unit) {
-    TODO("Not yet implemented")
+fun BreathingCard() {
+    var isBreathingIn by remember { mutableStateOf(true) }
+    val scale by animateFloatAsState(
+        targetValue = if (isBreathingIn) 1.5f else 1f,
+        animationSpec = tween(4000, easing = LinearEasing),
+        label = ""
+    )
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(4000)
+            isBreathingIn = !isBreathingIn
+        }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth().shadow(4.dp, RoundedCornerShape(20.dp)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Column(modifier = Modifier.padding(24.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Take a moment to breathe", fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+            Spacer(modifier = Modifier.height(32.dp))
+            Box(modifier = Modifier.size(60.dp).scale(scale).background(Color(0xFF81C784), CircleShape), contentAlignment = Alignment.Center) {}
+            Spacer(modifier = Modifier.height(32.dp))
+            Text(if (isBreathingIn) "Inhale..." else "Exhale...", fontSize = 18.sp, fontWeight = FontWeight.Medium, color = Color.DarkGray)
+        }
+    }
 }
 
-/** COMPONENTES ADICIONALES PARA RELLENAR LA APP **/
+@Composable
+fun ZenFlowBottomBar(currentRoute: String, onHomeClick: () -> Unit, onDiscoverClick: () -> Unit, onProfileClick: () -> Unit) {
+    NavigationBar(containerColor = Color.White, tonalElevation = 16.dp) {
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, contentDescription = null) }, label = { Text("Home") },
+            selected = currentRoute == "home", onClick = onHomeClick,
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = ZenFlowOrange, selectedTextColor = ZenFlowOrange, indicatorColor = Color.Transparent)
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Explore, contentDescription = null) }, label = { Text("Discover") },
+            selected = currentRoute == "discover", onClick = onDiscoverClick,
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = ZenFlowOrange, selectedTextColor = ZenFlowOrange, indicatorColor = Color.Transparent)
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Person, contentDescription = null) }, label = { Text("Profile") },
+            selected = currentRoute == "profile", onClick = onProfileClick,
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = ZenFlowOrange, selectedTextColor = ZenFlowOrange, indicatorColor = Color.Transparent)
+        )
+    }
+}
 
 @Composable
 fun MoodSelector() {
@@ -223,5 +302,4 @@ fun DailyStepsWidget() {
     }
 }
 
-// Modelo de datos actualizado con categorías
 data class WorkoutItem(val title: String, val duration: String, val icon: ImageVector, val category: String)
