@@ -18,11 +18,20 @@ object PoseUtils {
 
     fun validatePose(exerciseName: String, pose: Pose): Pair<Boolean, String> {
         return when {
-            exerciseName.contains("Stretch", ignoreCase = true) || exerciseName.contains("Cobra", ignoreCase = true) -> {
+            exerciseName.contains("Morning", ignoreCase = true) || exerciseName.contains("Cobra", ignoreCase = true) -> {
                 validateCobra(pose)
             }
             exerciseName.contains("Pause", ignoreCase = true) || exerciseName.contains("Flexibility", ignoreCase = true) -> {
                 validateTreePose(pose)
+            }
+            exerciseName.contains("Office", ignoreCase = true) || exerciseName.contains("Chair", ignoreCase = true) -> {
+                validateChairPose(pose)
+            }
+            exerciseName.contains("Strength", ignoreCase = true) || exerciseName.contains("Power", ignoreCase = true) -> {
+                validatePlank(pose)
+            }
+            exerciseName.contains("Night", ignoreCase = true) || exerciseName.contains("Relaxation", ignoreCase = true) -> {
+                validateWarriorPose(pose)
             }
             else -> {
                 validateWarriorPose(pose)
@@ -88,4 +97,62 @@ object PoseUtils {
         }
         return Pair(false, "Ubícate frente a la cámara de cuerpo completo")
     }
+
+    // --- NUEVA POSE: SILLA (Para Office Pause) ---
+    private fun validateChairPose(pose: Pose): Pair<Boolean, String> {
+        val hip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP)
+        val knee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE)
+        val ankle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE)
+        val wrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST)
+        val shoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER)
+
+        if (hip != null && knee != null && ankle != null && wrist != null && shoulder != null) {
+            val kneeAngle = getAngle(hip, knee, ankle)
+            val areArmsUp = wrist.position.y < shoulder.position.y
+
+            return when {
+                kneeAngle > 145 -> Pair(false, "Baja más la cadera (como sentado)")
+                !areArmsUp -> Pair(false, "Sube los brazos al cielo")
+                else -> Pair(true, "¡Silla perfecta! Mantén la fuerza")
+            }
+        }
+        return Pair(false, "Ubícate de lado para la Silla")
+    }
+
+    // --- NUEVA POSE: PLANCHA (Para Strength / Power) ---
+    private fun validatePlank(pose: Pose): Pair<Boolean, String> {
+        val shoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER)
+        val hip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP)
+        val knee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE)
+
+        if (shoulder != null && hip != null && knee != null) {
+            val bodyLine = getAngle(shoulder, hip, knee)
+            // Una plancha debe estar casi recta (cerca de 180 grados)
+            return if (bodyLine > 165) Pair(true, "¡Plancha sólida! Mantén el abdomen firme")
+            else Pair(false, "No bajes ni subas mucho la cadera")
+        }
+        return Pair(false, "Ponte en posición de tabla (Plancha)")
+    }
+
+    // --- NUEVA POSE FÁCIL: ESTIRAMIENTO LATERAL (Para Night Relaxation) ---
+    private fun validateSideStretch(pose: Pose): Pair<Boolean, String> {
+        val leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST)
+        val rightWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST)
+        val head = pose.getPoseLandmark(PoseLandmark.NOSE)
+
+        if (leftWrist != null && rightWrist != null && head != null) {
+            // Chequeamos si al menos una mano está por encima de la cabeza
+            // (En coordenadas de pantalla, menor Y significa más arriba)
+            val isLeftArmUp = leftWrist.position.y < head.position.y
+            val isRightArmUp = rightWrist.position.y < head.position.y
+
+            return if (isLeftArmUp || isRightArmUp) {
+                Pair(true, "¡Bien! Estira tu costado y respira...")
+            } else {
+                Pair(false, "Sube un brazo sobre tu cabeza y inclínate")
+            }
+        }
+        return Pair(false, "Ubícate frente a la cámara")
+    }
 }
+
